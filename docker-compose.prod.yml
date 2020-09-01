@@ -1,0 +1,42 @@
+version: '3.7'
+    
+services:
+  db:
+    image: postgres
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env.prod.db
+  web:
+    build: ./RinPy
+    command: gunicorn RinPy.wsgi:application --bind 0.0.0.0:8000
+    # ports:
+    #   - 8000:8000
+    expose:
+      - 8000
+    depends_on:
+      - db
+      # - migrate
+    env_file:
+      - ./.env.prod
+  migrate:
+    build: ./RinPy
+    command: python manage.py migrate --noinput
+    depends_on:
+      - web
+      - db
+    env_file:
+      - ./.env.prod
+  nginx:
+    build: ./nginx
+    ports:
+      - 1337:80
+    depends_on:
+      - web
+
+volumes:
+  postgres_data:

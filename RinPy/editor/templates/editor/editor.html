@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editor{% endblock title %}
+
+{% block meta %}
+  <script src="{% static 'editor/codemirror/lib/codemirror.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'editor/codemirror/lib/codemirror.css' %}">
+  <script src="{% static 'editor/codemirror/mode/python/python.js' %}"></script>
+  <script src="{% static 'editor/codemirror/addon/mode/simple.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'editor/codemirror/theme/ayu-dark.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'editor/style.css' %}" />
+  <script src="{% static 'editor/scripts.js' %}"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.5.11/split.min.js"></script>
+{% endblock meta %}
+
+{% block content %}
+  <!-- Editor -->
+  <div class="editor_container">
+    <form action="#" method="post" class="explorer" id="explorer">
+      {% csrf_token %}
+      <div class="explorer">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            {% for folder_name, folder_lvl in directory %}
+              <li class="breadcrumb-item" aria-current="page">
+                <button type='submit' name='$go_to_parents_directory${{ folder_lvl }}' style="border: 0px; background-color: transparent; color: #007bff;">{{ folder_name }}</button>
+              </li>
+            {% endfor %}
+          </ol>
+        </nav>
+        <input type='submit' value='^^^' name='$go_to_parents_directory$1'>
+        {% for file_name, file_type in files %}
+          <input type='submit' value='{{ file_name }}' name='{{ file_name }}' style='color: {{ file_type }}'>
+        {% endfor %}
+      </div>
+      
+      <!-- Button trigger modal -->
+      <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+        Create file
+      </button>
+    </form>
+    <form action="#" method="post" class="editor" id="editor">
+      {% csrf_token %}
+      <div class="code_container" id="code_container">
+        <textarea id="code" name="code" placeholder="Output...">{{ input }}</textarea>
+      </div>
+      <div class="output_container" id="output_container">
+        <textarea id="output" class="output" placeholder="Output will be here..." readonly>{{ output }}</textarea>
+      </div>
+      <div class="btn_container">
+        <button type="button" class="btn btn-success run_btn">Save</button>
+        <input type="submit" class="btn btn-danger run_btn" value="Run" name="runbtn">
+      </div>
+    </form>
+  </div>
+
+<!-- Modal -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Save changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock content %}
