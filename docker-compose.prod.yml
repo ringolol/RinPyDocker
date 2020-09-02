@@ -14,25 +14,28 @@ services:
   web:
     build: ./RinPy
     command: gunicorn RinPy.wsgi:application --bind 0.0.0.0:8000
-    # ports:
-    #   - 8000:8000
+    volumes:
+      - static_volume:/code/staticfiles
     expose:
       - 8000
     depends_on:
       - db
-      # - migrate
     env_file:
       - ./.env.prod
   migrate:
     build: ./RinPy
-    command: python manage.py migrate --noinput
+    command: sh -c "python manage.py migrate && python manage.py collectstatic --clear --noinput"
     depends_on:
       - web
       - db
     env_file:
       - ./.env.prod
+    volumes:
+      - static_volume:/code/staticfiles
   nginx:
     build: ./nginx
+    volumes:
+      - static_volume:/code/staticfiles
     ports:
       - 1337:80
     depends_on:
@@ -40,3 +43,4 @@ services:
 
 volumes:
   postgres_data:
+  static_volume:

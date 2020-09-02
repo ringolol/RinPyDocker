@@ -1,5 +1,7 @@
 FROM python:3.8.3-alpine
 
+# RUN mkdir /staticfiles
+
 RUN mkdir /code
 WORKDIR /code
 
