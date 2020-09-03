@@ -40,12 +40,12 @@ Work in progress:
 
 try:
     # works for django
-    from .simulator import Sim, BLOCK_TYPES, Block, ReturnException
+    from .simulator import Sim, BLOCK_TYPES, Block, ReturnException, Signal
     from .parser_utils import master_pat, generate_tokens, \
             sys_funs, logic_funs
 except ImportError:
     # works outside of django
-    from simulator import Sim, BLOCK_TYPES, Block, ReturnException
+    from simulator import Sim, BLOCK_TYPES, Block, ReturnException, Signal
     from parser_utils import master_pat, generate_tokens, \
             sys_funs, logic_funs
 
@@ -260,7 +260,7 @@ class ExpressionEvaluator:
         '''
         factor  ::=  NUM | "(" log_expr ")" | '[' {log_expr}* ']' | named
         '''
-
+        self._accept('PLUS')
         minus = self._accept('MINUS')
         if self._accept('NUM'):
             return self.sim.create('num', [(-1 if minus else 1)*float(self.tok.value)])
@@ -295,15 +295,23 @@ class ExpressionEvaluator:
         named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"}
         '''
 
-        # it is function
-        if self._accept('LSQBRACK'):
+        if self._accept('DOT'):
+            self._expect('NAME')
+            par = self.tok.value
+            self.memory['_'] = getattr(self.memory[name], par)
+            try:
+                val = self.named('_')
+            except SyntaxError:
+                pass
+            return val
+        elif self._accept('LSQBRACK'):
             exp = self.log_expr()
             num = exp.outputs[0].val
             val = self.memory[name][int(num)]
             self._expect('RSQBRACK')
             if isinstance(val, Fun):
                 name = val.name
-            elif isinstance(val, Block) or isinstance(val, list):
+            elif isinstance(val, Block) or isinstance(val, list) or isinstance(val, Signal):
                 self.memory['_'] = val
                 try:
                     val = self.named('_')
@@ -311,7 +319,7 @@ class ExpressionEvaluator:
                     pass
                 return val
             else:
-                raise SyntaxError(f'found unknown type in the array +' +
+                raise SyntaxError(f'found unknown type in the array ' +
                         f'"type({val}) = {type(val)}"')
         if self._accept('LPAREN'):
             # while we are inside the function brackets 
