@@ -51,33 +51,35 @@ def rect_meth(t, dt, xn, dx):
     return xn + dt*dx
 
 # blocks' functions
-def num(t, dt, inputs, outputs, pars, states):
-    if inputs[0]:
+def num(t, dt, inputs, outputs, pars, states, source):
+    if not source:
         outputs[0].val = pars[0] * inputs[0].val
     else:
         outputs[0].val = pars[0]
 
-def add(t, dt, inputs, outputs, pars, states):
+def add(t, dt, inputs, outputs, pars, states, source):
     outputs[0].val = inputs[0].val + inputs[1].val
 
-def integ(t, dt, inputs, outputs, pars, states):
+def integ(t, dt, inputs, outputs, pars, states, source):
     return inputs[0].val if inputs[0] != None \
         and inputs[0].val != None else 0
 
-def div(t, dt, inputs, outputs, pars, states):
+def div(t, dt, inputs, outputs, pars, states, source):
     outputs[0].val = inputs[0].val / inputs[1].val
 
-def mult(t, dt, inputs, outputs, pars, states):
+def mult(t, dt, inputs, outputs, pars, states, source):
     outputs[0].val = inputs[0].val * inputs[1].val
 
-def time(t, dt, inputs, outputs, pars, states):
+def time(t, dt, inputs, outputs, pars, states, source):
     outputs[0].val = t
 
-def fun(t, dt, inputs, outputs, pars, states):
+def fun(t, dt, inputs, outputs, pars, states, source):
     f = pars[0]
     sim = Sim()
-    outputs[0].val = f(pars=[sim.create('num', [inp.val]) for inp in inputs], 
-                       sim=sim, memo_space={}, sys=True).outputs[0].val
+    outs = f(pars=[sim.create('num', [inp.val]) for inp in inputs.values()], 
+                    sim=sim, memo_space={}, sys=True).outputs
+    for inx, out in enumerate(outs.values()):
+        outputs[inx].val = out.val
 
 # blocks
 BLOCK_TYPES = {
@@ -87,7 +89,7 @@ BLOCK_TYPES = {
     'div':      BlockType(True,  False, 2, 1, [], []),
     'mult':     BlockType(True,  False, 2, 1, [], []),
     'time':     BlockType(True,  True,  0, 1, [], []),
-    'fun':      BlockType(True,  True,  1, 1, [None], []),
+    'fun':      BlockType(True,  True,  1, 1, [None, None], []),
 }
 
 # functions for blocks
@@ -160,11 +162,11 @@ class Sim:
         return string
 
 
-class Singal:
+class Signal:
     '''simple signal between blocks'''
     def __init__(self, parent=None):
         self.ready = False
-        self._val = None
+        self._val = 0
         self.parent = parent
         self.hist = []
 
@@ -181,7 +183,46 @@ class Singal:
         self.ready = flg
 
     def __repr__(self):
-        return f'{self.val}'
+        return f'Signal(val={self.val}, parent={self.parent.name})'
+
+    def __mul__(self, other):
+        m = self.sim.create('mult')
+        m.inputs[0] = self
+        m.inputs[1] = other
+        m.upd_and_calc()
+        return m.outputs[0]
+
+    def __matmul__(self, other):
+        dic = other.parent.inputs
+        oinx = list(dic.keys())[list(dic.values()).index(other)]
+        other.parent.inputs[oinx] = self
+        other.parent.upd_and_calc()
+        return other
+
+    def __add__(self, other):
+        s = self.sim.create('add')
+        s.inputs[0] = self
+        s.inputs[1] = other
+        s.upd_and_calc()
+        return s.outputs[0]
+
+    def __sub__(self, other):
+        return self + (-other)
+
+    def __neg__(self):
+        '''used for negation of signal, e.g. [b1]-->[-1]-->'''
+        g = self.sim.create('num', [-1])
+        n = self.parent @ g
+        n.upd_and_calc()
+        return n.outputs[0]
+
+    def __truediv__(self, other):
+        '''divides one signal by another'''
+        d = self.sim.create('div')
+        d.inputs[0] = self
+        d.inputs[1] = other
+        d.upd_and_calc()
+        return d.outputs[0]
 
 
 class Block:
@@ -193,17 +234,21 @@ class Block:
         self.name = name
         (self.inert, self.source, inpN, outpN, 
                 def_pars, def_states) = BLOCK_TYPES[name]
-        self.inputs = [None] * inpN
-        self.outputs = [Singal(self)] * outpN
-        self.const = self.inert
 
         if pars == None:
             self.pars = def_pars[:]
         elif len(pars) == len(def_pars):
             self.pars = pars[:]
+            if name == 'fun':
+                inpN = int(self.pars[1].outputs[0].val)
+                outpN = len(self.pars[0]._par_names)
         else:
             raise SimException(f'number of pars for block {name} does not match'+\
                     f', need {len(def_pars)} got {len(pars)}')
+
+        self.inputs = { key:Signal(self) for key in range(inpN) }
+        self.outputs = { key:Signal(self) for key in range(outpN) }
+        self.const = self.inert
 
         if states == None:
             self.states = def_states[:]
@@ -218,11 +263,11 @@ class Block:
 
     def is_ready(self):
         '''return true if all inputs are ready'''
-        return all([inp.ready for inp in self.inputs])
+        return all([inp.ready for inp in self.inputs.values()])
 
     def set_ready(self, flg=True):
-        '''set outputs ready flag'''
-        for outp in self.outputs:
+        '''set all outputs ready'''
+        for outp in self.outputs.values():
             outp.reset(flg)
 
     # def is_connected(self):
@@ -242,13 +287,13 @@ class Block:
             # algebraic calculation
             self.fun(
                 t, dt, self.inputs, 
-                self.outputs, self.pars, self.states
+                self.outputs, self.pars, self.states, self.source
             )
         else:
             # numeric integration
             dx12 = self.fun(
                 t, dt, self.inputs, 
-                self.outputs, self.pars, self.states
+                self.outputs, self.pars, self.states, self.source
             )
             for i in range(len(self.states)-1, -1, -1):
                 self.states[i] = rect_meth(t, dt, self.states[i], dx12)
@@ -263,7 +308,7 @@ class Block:
             self.calc(0, 0)
 
     def upd_const_flag(self):
-        self.const = all([inp.parent.const for inp in self.inputs])
+        self.const = all([not inp or inp.parent.const for inp in self.inputs.values()])
 
     def __repr__(self):
         return f'Block(name={self.name}, pars={self.pars},'+\

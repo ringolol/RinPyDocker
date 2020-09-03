@@ -26,5 +26,6 @@ def djex(request, code_str, file_path='', timeout=30):
     try:
         out = asyncio.run(run_code(code_str, timeout))
     except Exception as e:
+        raise
         out = str(e)
     return out

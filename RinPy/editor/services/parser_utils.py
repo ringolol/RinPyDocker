@@ -43,6 +43,7 @@ NOT = r'(?P<NOT>not)'       # NOT must be above NAME
 RETURN = r'(?P<RETURN>return)' # RETURN must be above NAME
 NAME = r'(?P<NAME>[A-Za-z_][A-Za-z_0-9]*)'
 COMMA = r'(?P<COMMA>,)'
+DOT = r'(?P<DOT>\.)'
 NL = r'(?P<NL>\n)'
 SEMICOLON = r'(?P<SEMICOLON>;)'
 LSQBRACK = r'(?P<LSQBRACK>\[)'
@@ -62,7 +63,8 @@ master_pat = re.compile('|'.join([
     FOR,        WHILE,      AND,
     OR,
     NOT,        RETURN,     
-    NAME,       COMMA,      NL,
+    NAME,       COMMA,      DOT,
+    NL,
     SEMICOLON,  LSQBRACK,   RSQBRACK,
     LCUBRACK,   RCUBRACK,   
 ]))
