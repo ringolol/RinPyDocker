@@ -130,7 +130,7 @@ class Sim:
                 cont_flg = False
                 non_calc = []
                 for block in sim_blocks:
-                    if block.source or block.inputs.is_ready():
+                    if block.source or block.is_ready():
                         try:
                             block.calc(t, dt)
                         except Exception as ex:
@@ -150,7 +150,7 @@ class Sim:
 
     def reset(self):
         for block in self.blocks:
-            block.outputs.set_ready(False)
+            block.set_ready(False)
 
     def __repr__(self):
         string = '-----Sim()-----\n'
@@ -162,9 +162,10 @@ class Sim:
 
 class Singal:
     '''simple signal between blocks'''
-    def __init__(self):
+    def __init__(self, parent=None):
         self.ready = False
         self._val = None
+        self.parent = parent
         self.hist = []
 
     @property
@@ -183,40 +184,6 @@ class Singal:
         return f'{self.val}'
 
 
-class SignalVector:
-    '''vector of signals, usually as output from a block'''
-
-    def __init__(self, size=1, parent=None, empty=False):
-        '''create vector of signals'''
-        self._signals = [Singal() if not empty else None] * size
-        self.parent = parent
-
-    def is_connected(self):
-        '''check if all signals are connected to some output 
-            (always true for an output)'''
-        return all(self._signals)
-
-    def set_ready(self, flg=True):
-        '''set signals' ready flag'''
-        for signal in self._signals:
-            signal.reset(flg)
-
-    def is_ready(self):
-        '''return true if all signals are ready'''
-        return all([signal.ready for signal in self._signals])
-
-    def __getitem__(self, key):
-        '''access signals'''
-        return self._signals[key]
-
-    def __setitem__(self, key, value):
-        '''access signals'''
-        self._signals[key] = value
-
-    def __repr__(self):
-        return str(self._signals)
-
-
 class Block:
     '''a sim block'''
 
@@ -226,8 +193,8 @@ class Block:
         self.name = name
         (self.inert, self.source, inpN, outpN, 
                 def_pars, def_states) = BLOCK_TYPES[name]
-        self.inputs = SignalVector(inpN, empty=True, parent=self)
-        self.outputs = SignalVector(outpN, parent=self)
+        self.inputs = [None] * inpN
+        self.outputs = [Singal(self)] * outpN
         self.const = self.inert
 
         if pars == None:
@@ -249,11 +216,25 @@ class Block:
         self.fun = BLOCK_FUNCTIONS[name]
         self.sim = sim
 
+    def is_ready(self):
+        '''return true if all inputs are ready'''
+        return all([inp.ready for inp in self.inputs])
+
+    def set_ready(self, flg=True):
+        '''set outputs ready flag'''
+        for outp in self.outputs:
+            outp.reset(flg)
+
+    # def is_connected(self):
+    #     '''check if all signals are connected to some output 
+    #         (always true for an output)'''
+    #     return all(self._signals)
+
     # def copy(self):
     #     return Block(self.name, self.pars, self.states, self.sim)
 
     def calc(self, t, dt):
-        if not self.source and not self.inputs.is_ready():
+        if not self.source and not self.is_ready():
             return False
 
         '''calc the block'''
@@ -273,7 +254,7 @@ class Block:
                 self.states[i] = rect_meth(t, dt, self.states[i], dx12)
                 self.outputs[i].val = self.states[i]
 
-        self.outputs.set_ready()
+        self.set_ready()
         return True
 
     def upd_and_calc(self):
@@ -282,7 +263,7 @@ class Block:
             self.calc(0, 0)
 
     def upd_const_flag(self):
-        self.const = self.inputs.parent.const
+        self.const = all([inp.parent.const for inp in self.inputs])
 
     def __repr__(self):
         return f'Block(name={self.name}, pars={self.pars},'+\
