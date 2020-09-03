@@ -13,7 +13,7 @@ services:
     build: ./RinPy
     command: python manage.py runserver 0.0.0.0:8000  
     volumes:
-      - ./app/:/usr/src/app/
+      - static_volume:/code/staticfiles
     ports:
       - 8000:8000
     depends_on:
@@ -28,6 +28,19 @@ services:
       - web
     env_file:
       - ./.env.dev
+    volumes:
+      - static_volume:/code/staticfiles
+  static:
+    build: ./RinPy
+    command: python manage.py collectstatic --noinput
+    depends_on:
+      - web
+      - db
+    env_file:
+      - ./.env.dev
+    volumes:
+      - static_volume:/code/staticfiles
 
 volumes:
   postgres_data:
+  static_volume:
