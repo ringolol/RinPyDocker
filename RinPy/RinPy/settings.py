@@ -20,24 +20,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# SECRET_KEY = ')e=(4te0)1n18!%^avk@k-2+x)qxk5d2^%bpbbdj_=mdg&j0p='
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
 DEBUG = int(os.environ.get("DEBUG", default=0))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
-# ALLOWED_HOSTS = [
-#     '31.134.153.18',
-#     '192.168.1.3',
-#     '192.168.1.8',
-#     '127.0.0.1',
-#     'localhost',
-# ]
-
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -159,16 +147,16 @@ REST_FRAMEWORK = {
     ]
 }
 
+CORS_ORIGIN_ALLOW_ALL = True
+
+CORS_ALLOW_CREDENTIALS = True
+
 # from corsheaders.defaults import default_methods
 
 # CORS_ALLOW_METHODS = list(default_methods) + [
 #     'Access-Control-Allow-Headers',
 #     'Access-Control-Allow-Credentials',
 # ]
-
-CORS_ORIGIN_ALLOW_ALL = True
-
-CORS_ALLOW_CREDENTIALS = True
 
 # CORS_ALLOWED_ORIGINS = [
 #     "http://localhost:3000",
