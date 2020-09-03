@@ -1,0 +1,80 @@
+[
+    {
+        "name": "const",
+        "inpN": 0,
+        "outpN": 1,
+        "pars": {
+            "val": 1
+        },
+        "states": {}
+    },
+    {
+        "name": "integ",
+        "inpN": 1,
+        "outpN": 1,
+        "pars": {},
+        "states": {
+            "0": 0
+        }
+    },
+    {
+        "name": "gain",
+        "inpN": 1,
+        "outpN": 1,
+        "pars": {
+            "val": 1
+        },
+        "states": {}
+    },
+    {
+        "name": "sum",
+        "inpN": 2,
+        "outpN": 1,
+        "pars": {},
+        "states": {}
+    },
+    {
+        "name": "sub",
+        "inpN": 2,
+        "outpN": 1,
+        "pars": {},
+        "states": {}
+    },
+    {
+        "name": "mult",
+        "inpN": 2,
+        "outpN": 1,
+        "pars": {},
+        "states": {}
+    },
+    {
+        "name": "div",
+        "inpN": 2,
+        "outpN": 1,
+        "pars": {},
+        "states": {}
+    },
+    {
+        "name": "fun",
+        "inpN": 1,
+        "outpN": 1,
+        "pars": {
+            "fun": null
+        },
+        "states": {}
+    },
+    {
+        "name": "plot",
+        "inpN": 1,
+        "outpN": 0,
+        "pars": {},
+        "states": {}
+    },
+    {
+        "name": "disp",
+        "inpN": 1,
+        "outpN": 0,
+        "pars": {},
+        "states": {}
+    }
+]
