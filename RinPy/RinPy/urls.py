@@ -25,6 +25,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from rest_framework.authtoken import views as api_views
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
+import rest_registration
 
 from . import views
 
@@ -48,15 +49,19 @@ class UserViewSet(viewsets.ModelViewSet):
 router = routers.DefaultRouter()
 router.register(r'users', UserViewSet)
 
+api_urlpatterns = [
+    path('accounts/', include('rest_registration.api.urls')),
+]
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/v1/', include(api_urlpatterns)),
     path('editor/', include('editor.urls')),
     path('diagram/', include('diagram.urls')),
     path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
     path('accounts/logout/', views.logout_request, name="logout"),
     path('accounts/register/', views.register, name='register'),
     path('', lambda request: redirect('editor')),
-    path('api/', include(router.urls)),
+    # path('api/', include(router.urls)),
     path('api-token-auth/', api_views.obtain_auth_token, name='rest_api'),
 ]
