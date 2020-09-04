@@ -383,7 +383,7 @@ class ExpressionEvaluator:
             right_expr = self.expr()
             res = logic_funs[op](left_expr, right_expr)
             return not res if is_not else res
-        # raise Exception('expected a condition operator: >|<|>=|<=|!=|==')
+
         return not left_expr if is_not else left_expr
 
     def if_exp(self, skip=False):
@@ -422,7 +422,6 @@ class ExpressionEvaluator:
                     if not self._accept('RCUBRACK'):
                         raise SyntaxError('expected RCUBRACK')
             else:
-                # todo make a function out of it!
                 self._expect('LCUBRACK')
                 self._get_body()
                 self._accept('RCUBRACK')
@@ -465,7 +464,6 @@ class ExpressionEvaluator:
             self._advance()
             
         cond_fun = Fun('', [], cond)
-        # print(cond_fun)
         self._expect('LCUBRACK')
         body = self._get_body()
 

@@ -52,16 +52,18 @@ BlockType = namedtuple('BlockType', [
     'def_states'    # default states
 ])
 
-def decorator_counter():
-    i = 0
-    def counter():
-         nonlocal i
-         i += 1
-         return i
-    return counter
 
-# get new id on each call
-get_id = decorator_counter()
+def decorator_counter():
+    '''decorate counter'''
+
+    dic = {}
+    def counter(tp):
+        '''count blocks of type tp'''
+
+        nonlocal dic
+        dic[tp] = dic.get(tp, -1) + 1
+        return dic[tp]
+    return counter
 
 
 # numeric integrals
@@ -157,11 +159,14 @@ class Sim:
     def __init__(self):
         self.blocks = []
         self.t_hist = None
+        # get new id on each call
+        self.get_id = decorator_counter()
+
 
     def create(self, name, pars=None, states=None):
         '''add block to simulation using name, pars and states'''
 
-        block = Block(name, pars, states, self)
+        block = Block(name, pars, states, self, self.get_id(name))
         self.blocks.append(block)
         if name == 'num':
             block.upd_and_calc()
@@ -185,7 +190,7 @@ class Sim:
                         try:
                             block.calc(t, dt)
                         except Exception as ex:
-                            raise # for debug
+                            # raise # for debug
                             print(ex)
                         cont_flg = True
                     else:
@@ -290,7 +295,7 @@ class Signal:
 class Block:
     '''a sim block'''
 
-    def __init__(self, block_type, pars, states, sim):
+    def __init__(self, block_type, pars, states, sim, blk_id):
         '''
         init block using its name, pars and states
             block_type -- block type (num, add, sub, fun, integ...)
@@ -309,7 +314,7 @@ class Block:
         '''
 
         self.block_type = block_type
-        self.id = get_id() # useful thing, but yet unused
+        self.id = blk_id # useful thing, but yet unused
 
         # get block default parameters (not just pars) by its type
         (self.inert, self.source, inpN, outpN, 
