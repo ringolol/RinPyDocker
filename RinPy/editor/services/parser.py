@@ -10,7 +10,7 @@ Full grammatics for the interpretator:
     expr        ::=  term { ("+"|"-") term }*
     term        ::=  factor { ("*"|"/"|"@") factor }*
     factor      ::=  {+} {-} ( NUM | "(" log_expr ")" | '[' {log_expr}* ']' | named )
-    named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"} {"." named}
+    named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"} {".in" | ".out"}
     if_exp      ::=  "if" log_expr "{" code "}" 
                        { "else" if_exp }*
                        {"else" "{" code "}"}
@@ -311,12 +311,17 @@ class ExpressionEvaluator:
 
     def named(self, name):
         '''
-        named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"} {"." named}
+        named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"} {".in" | ".out"}
         '''
 
         if self._accept('DOT'):
             self._expect('NAME')
             par = self.tok.value
+            # dot syntax can be used only with .in and .out right now
+            if par not in ['in', 'out']:
+                raise SyntaxError('Dot syntax can be used only with .in and .out')
+            else:
+                par += 'puts'
             self.memory['_'] = getattr(self.memory[name], par)
             try:
                 val = self.named('_')

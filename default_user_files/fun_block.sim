@@ -5,10 +5,10 @@ def foo(x, y) {
 a = 1
 b = time()
 f = fun(foo, 2)
-a.outputs[0] @ f.inputs[0]
-b.outputs[0] @ f.inputs[1]
+a.out[0] @ f.in[0]
+b.out[0] @ f.in[1]
 calc(0.1, 5)
 print(f)
-print(f.outputs[0])
-print(f.outputs[1])
+print(f.out[0])
+print(f.out[1])
 plot(b, f)

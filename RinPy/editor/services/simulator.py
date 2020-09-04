@@ -16,7 +16,7 @@
 
 from collections import namedtuple
 from numbers import Number
-from math import isclose
+from math import isclose, isnan
 
 import termplotlib as tpl
 
@@ -96,7 +96,7 @@ def add(t, dt, inputs, outputs, pars, states, source):
 def integ(t, dt, inputs, outputs, pars, states, source):
     '''an integrator (1/s)'''
 
-    if inputs[0] != None and inputs[0].val != None:
+    if inputs[0] and not isnan(inputs[0].val):
         return inputs[0].val
     return states[0]
 
@@ -230,12 +230,12 @@ class Signal:
         hist -- history of val values (for plots)
     '''
 
-    def __init__(self, parent, sim):
+    def __init__(self, parent, sim, val=float('nan')):
         self.ready = False
         self.parent = parent
         self.sim = sim
         self.hist = []
-        self.val = 0
+        self.val = val
 
     @property
     def val(self):

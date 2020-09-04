@@ -2,9 +2,10 @@ x = num(3)
 y = 4
 a = add()
 b = mult()
-x.outputs[0] @ a.inputs[0]
-y.outputs[0] @ a.inputs[1]
+x.out[0] @ a.in[0]
+y.out[0] @ a.in[1]
 print(a)
-x.outputs[0] @ b.inputs[0]
-a.outputs[0] @ b.inputs[1]
+x.out[0] @ b.in[0]
+a.out[0] @ b.in[1]
 print(b)
+debug()
