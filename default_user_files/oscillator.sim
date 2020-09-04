@@ -1,0 +1,11 @@
+x = 1
+dy = integ()
+y = dy @ integ()
+kdy = dy @ 0.3
+e = x - (kdy + y)
+e @ dy
+t = time()
+calc(0.01, 15)
+plot(t, y)
+plot(y, dy)
+print(y)
