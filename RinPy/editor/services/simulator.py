@@ -308,7 +308,7 @@ class Block:
         if pars == None:
             self.pars = def_pars[:]
         elif len(pars) == len(def_pars):
-            self.pars = pars[:]
+            self.pars = [p.outputs[0].val if isinstance(p, Block) else p for p in pars]
             # todo: rethink the way of changing inps num
             if block_type == 'fun':
                 outpN = int(self.pars[1].outputs[0].val)
@@ -461,4 +461,3 @@ class Block:
 
     def __ge__(self, other):
         return other.__lt__(self) or self.__eq__(other)
-        

@@ -116,7 +116,10 @@ def print_signal(pars, memo_space, sim):
     lines = []
     for par in pars:
         if isinstance(par, Block):
+            # print('is block')
+            # print(str(par))
             lines.append(str(par.outputs[0].val))
+            # lines.append(str(par))
         elif isinstance(par, list):
             lines.append(array_to_str(par))
         else:
