@@ -1,15 +1,16 @@
 '''
 Full grammatics for the interpretator:
     code        ::=  assig { ("\\n"|";") assig }*
-    assig       ::=  "if" if_exp 
-                        | "while" while_exp 
-                        | "def" fun
+    assig       ::= "def" fun
                         | "return" expr
-                        | { ASS } log_expr
+                        | "if" if_exp 
+                        | "for" for_exp         # not implemented
+                        | "while" while_exp 
+                        | ASS { log_expr }
     expr        ::=  term { ("+"|"-") term }*
     term        ::=  factor { ("*"|"/"|"@") factor }*
-    factor      ::=  NUM | "(" log_expr ")" | '[' {log_expr}* ']' | named
-    named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"}
+    factor      ::=  {+} {-} ( NUM | "(" log_expr ")" | '[' {log_expr}* ']' | named )
+    named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"} {"." named}
     if_exp      ::=  "if" log_expr "{" code "}" 
                        { "else" if_exp }*
                        {"else" "{" code "}"}
@@ -23,20 +24,14 @@ Full grammatics for the interpretator:
 
 Work in progress:
     for_exp     ::=  "for" named "=" "NUM":{"NUM":}"NUM" "{" code "}"
-    named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"} {"." named}
 '''
 
 # Ideas:
-#   - choose input and output to connect (medium)
 #   - strings (medium?)
 #   - proper numerical integration (very hard)
 #   - for-cycle (easy)
 #   - unit tests (hard)
 #   - comments (easy)
-
-# Issues
-#   - block has only one input and output (it's bad)
-#   - SignalVector has a parent, but not Vector itself
 
 try:
     # works for django
@@ -59,19 +54,26 @@ class Fun:
         self._body = body
 
     def __call__(self, pars, sim, memo_space, shared=False, sys=False):
-        '''calculate function in sim space using pars as parameters 
-            and memo_space as memory space'''
+        '''
+        calculate function in sim space using pars as parameters 
+            and memo_space as memory space
+        if shared is True then vars will be inserted directly into memo_space
+            (this is used in if-statements and while-loops)
+        if sys is True then add systems function into name-space
+        '''
 
-        if not shared:
+        if not shared: # create separated name-space
             par_space = {k:v for k, v in zip(self._par_names, pars)}
             space = {**sys_funs} if sys else {}
             space = {**space, **memo_space, **par_space}
-        else:
+        else: # use existing name-space
             space = memo_space
+
         try:
+            # calc function
             out_val = ExpressionEvaluator(sim, space).parse(self._body)
         except ReturnException as ex:
-            out_val = ex.val
+            out_val = ex.val # return value
 
         return out_val
 
@@ -111,13 +113,13 @@ class ExpressionEvaluator:
 
         # advance to the first token
         self._advance()
-            
         # start evaluating
         return self.code()
 
     def _advance(self):
         '''move by one token'''
-        # print(self.nexttok.value if self.nexttok else '')
+
+        # print(self.nexttok) # debug
         self.tok, self.nexttok = self.nexttok, next(self.tokens, None)
 
     def _accept(self, toktype):
@@ -136,6 +138,8 @@ class ExpressionEvaluator:
             raise SyntaxError(f'Expected {toktype}, got {self.nexttok}')
 
     def _skip_sep(self):
+        '''skip ';' and '\\n' '''
+
         while self._accept('NL') or self._accept('SEMICOLON'):
             pass
 
@@ -146,7 +150,20 @@ class ExpressionEvaluator:
         for key in self.memory:
             print(f'{key}:\n  {self.memory[key]}')
 
-    # functions for interpretator
+    def _get_body(self):
+        '''get body of a function, an if-statement, a while-loop, etc.'''
+
+        depth, body = 1, ''
+        while depth > 0 or (self.nexttok and self.tok.value != '}'):
+            if self.nexttok.value == '}':
+                depth -= 1
+            elif self.nexttok.value == '{':
+                depth += 1
+            body += self.tok.value
+            self._advance()
+        return body
+
+    # ----------------SYNTAX---------------------------
     def code(self):
         '''
         code    ::=  assig { ('\\n'|';') assig }*
@@ -156,9 +173,8 @@ class ExpressionEvaluator:
         res = self.assig()
         while self._accept('NL') or self._accept('SEMICOLON'):
             self._skip_sep()
-            # handle empty expressions
-            if not self.nexttok:
-                return self.sim.create('num', [0])
+            if not self.nexttok: # handle some empty expressions
+                return None
             res = self.assig()
         
         return res
@@ -174,44 +190,43 @@ class ExpressionEvaluator:
         pars = self.pars()
         self._expect('RPAREN')
         self._expect('LCUBRACK')
-        depth, body = 1, ''
-        while depth > 0 or (self.nexttok and self.tok.value != '}'):
-            if self.nexttok.value == '}':
-                depth -= 1
-            elif self.nexttok.value == '{':
-                depth += 1
-            body += self.tok.value
-            self._advance()
+        body = self._get_body()
         self.memory[name] = Fun(name, pars, body[1:])
         return self.memory[name]
 
     def assig(self):
         '''
-        assig   ::=  "if" if_exp 
-                | "while" while_exp 
-                | "def" fun
-                | "return" expr
-                | { ASS } log_expr
+        assig   ::= "def" fun
+                        | "return" expr
+                        | "if" if_exp 
+                        | "for" for_exp         # not implemented
+                        | "while" while_exp 
+                        | ASS { log_expr }
         '''
 
-        if self._accept('ASS'):
-            name = self.tok.value[:-1].strip()
-            exp = self.log_expr()
-            self.memory[name] = exp
-            return self.memory[name]
-        elif self._accept('DEF'):
+        if self._accept('DEF'): # define function
             return self.fun()
         elif self._accept('RETURN'):
+            # return from function,
+            #   works like break inside a while loop
             exp = self.expr()
             raise ReturnException(exp)
-        elif self._accept('IF'):
+        elif self._accept('IF'): # if-statement
             return self.if_exp()
-        elif self._accept('FOR'):
+        elif self._accept('FOR'): # for-loop in development
             return self.for_exp()
-        elif self._accept('WHILE'):
+        elif self._accept('WHILE'): # while-loop
             self.while_exp()
+            return None
+
+        if self._accept('ASS'): # assign, e.g. var = ...
+            name = self.tok.value[:-1].strip()
         else:
-            return self.log_expr()
+            name = '_'
+
+        exp = self.log_expr()
+        self.memory[name] = exp
+        return self.memory[name]
 
     def pars(self):
         '''
@@ -259,12 +274,15 @@ class ExpressionEvaluator:
 
     def factor(self):
         '''
-        factor  ::=  NUM | "(" log_expr ")" | '[' {log_expr}* ']' | named
+        factor      ::=  {+} {-} ( NUM | "(" log_expr ")" | '[' {log_expr}* ']' | named )
         '''
+
         self._accept('PLUS')
         minus = self._accept('MINUS')
         if self._accept('NUM'):
-            return self.sim.create('num', [(-1 if minus else 1)*float(self.tok.value)])
+            return self.sim.create('num', [
+                (-1 if minus else 1) * float(self.tok.value)
+            ])
         elif self._accept('LPAREN'):
             expval = self.log_expr()
             self._expect('RPAREN')
@@ -293,7 +311,7 @@ class ExpressionEvaluator:
 
     def named(self, name):
         '''
-        named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"}
+        named       ::=  NAME {"[" log_expr "]"} {"(" {log_expr ","}* ")"} {"." named}
         '''
 
         if self._accept('DOT'):
@@ -303,7 +321,7 @@ class ExpressionEvaluator:
             try:
                 val = self.named('_')
             except SyntaxError:
-                pass
+                raise # todo: add some logic here
             return val
         elif self._accept('LSQBRACK'):
             exp = self.log_expr()
@@ -311,13 +329,13 @@ class ExpressionEvaluator:
             val = self.memory[name][int(num)]
             self._expect('RSQBRACK')
             if isinstance(val, Fun):
-                name = val.block_type
+                name = val.name
             elif isinstance(val, Block) or isinstance(val, list) or isinstance(val, Signal):
                 self.memory['_'] = val
                 try:
                     val = self.named('_')
                 except SyntaxError:
-                    pass
+                    raise # todo: add some logic here
                 return val
             else:
                 raise SyntaxError(f'found unknown type in the array ' +
@@ -344,10 +362,10 @@ class ExpressionEvaluator:
                                         sim=self.sim)
             return out_val
             
-        else: # it is var
+        else: # it is a var
             if name not in self.memory:
                 # create dummy signal
-                self.memory[name] = self.sim.create('num', [0])
+                self.memory[name] = self.sim.create('num', [float('nan')])
 
             return self.memory[name]
 
@@ -381,13 +399,7 @@ class ExpressionEvaluator:
         self._skip_sep()
         self._expect('LCUBRACK')
         if skip or not statement:
-            depth = 1
-            while depth > 0 or (self.nexttok and self.tok.value != '}'):
-                if self.nexttok.value == '}':
-                    depth -= 1
-                elif self.nexttok.value == '{':
-                    depth += 1
-                self._advance()
+            self._get_body()
         else:
             try:
                 self.code()
@@ -412,13 +424,7 @@ class ExpressionEvaluator:
             else:
                 # todo make a function out of it!
                 self._expect('LCUBRACK')
-                depth = 1
-                while depth > 0 or (self.nexttok and self.tok.value != '}'):
-                    if self.nexttok.value == '}':
-                        depth -= 1
-                    elif self.nexttok.value == '{':
-                        depth += 1
-                    self._advance()
+                self._get_body()
                 self._accept('RCUBRACK')
         return None
 
@@ -461,15 +467,8 @@ class ExpressionEvaluator:
         cond_fun = Fun('', [], cond)
         # print(cond_fun)
         self._expect('LCUBRACK')
+        body = self._get_body()
 
-        depth, body = 1, ''
-        while depth > 0 or (self.nexttok and self.tok.value != '}'):
-            if self.nexttok.value == '}':
-                depth -= 1
-            elif self.nexttok.value == '{':
-                depth += 1
-            body += self.tok.value
-            self._advance()
         body_fun = Fun('', [], body[1:])
         while cond_fun([], memo_space=self.memory, sim=self.sim):
             body_fun([], memo_space=self.memory, sim=self.sim, shared=True)

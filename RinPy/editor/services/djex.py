@@ -19,13 +19,13 @@ async def run_code(code_str, timeout):
         except asyncio.TimeoutError:
             print(f'Program was running for more than {timeout} '+
                     'sec and was terminated!')
+        except Exception as e:
+            # raise
+            print(str(e))
     return f.getvalue()
 
 def djex(request, code_str, file_path='', timeout=30):
     '''exec code_str and return print output or exeption text'''
-    try:
-        out = asyncio.run(run_code(code_str, timeout))
-    except Exception as e:
-        raise
-        out = str(e)
+    
+    out = asyncio.run(run_code(code_str, timeout))
     return out

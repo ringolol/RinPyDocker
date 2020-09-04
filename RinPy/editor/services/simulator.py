@@ -34,11 +34,10 @@ class ReturnException(Exception):
 
 class SimException(Exception):
     '''Exception that is raised in simulator'''
-
     pass
 
 
-# class Array(list): # in use!
+# class Array(list):
 #     '''array which can store FUNs and blocks'''
 #     pass
 
@@ -52,6 +51,17 @@ BlockType = namedtuple('BlockType', [
     'def_pars',     # default parameters
     'def_states'    # default states
 ])
+
+def decorator_counter():
+    i = 0
+    def counter():
+         nonlocal i
+         i += 1
+         return i
+    return counter
+
+# get new id on each call
+get_id = decorator_counter()
 
 
 # numeric integrals
@@ -175,7 +185,7 @@ class Sim:
                         try:
                             block.calc(t, dt)
                         except Exception as ex:
-                            raise ex
+                            raise # for debug
                             print(ex)
                         cont_flg = True
                     else:
@@ -227,9 +237,9 @@ class Signal:
         return self._val
 
     @val.setter
-    def val(self, value):
-        self._val = value
-        self.hist.append(value)
+    def val(self, val):
+        self._val = val
+        self.hist.append(val)
 
     def reset(self, flg = False):
         self.ready = flg
@@ -249,7 +259,7 @@ class Signal:
         oinx = lst.index(other)
         other.parent.inputs[oinx] = self
         other.parent.upd_and_calc()
-        return other
+        return other.parent.outputs[0]
 
     def __add__(self, other):
         s = self.sim.create('add')
@@ -264,9 +274,9 @@ class Signal:
     def __neg__(self):
         '''used for negation of signal, e.g. [b1]-->[-1]-->'''
         g = self.sim.create('num', [-1])
-        n = self.parent @ g
-        n.upd_and_calc()
-        return n.outputs[0]
+        n = self @ g.inputs[0]
+        g.upd_and_calc()
+        return n
 
     def __truediv__(self, other):
         '''divides one signal by another'''
@@ -299,6 +309,7 @@ class Block:
         '''
 
         self.block_type = block_type
+        self.id = get_id() # useful thing, but yet unused
 
         # get block default parameters (not just pars) by its type
         (self.inert, self.source, inpN, outpN, 
@@ -311,7 +322,7 @@ class Block:
             self.pars = [p.outputs[0].val if isinstance(p, Block) else p for p in pars]
             # todo: rethink the way of changing inps num
             if block_type == 'fun':
-                outpN = int(self.pars[1].outputs[0].val)
+                outpN = int(self.pars[1]) # .outputs[0].val
                 inpN = len(self.pars[0]._par_names)
         else:
             raise SimException(f'number of pars for block {block_type} does not match'+\
@@ -343,14 +354,6 @@ class Block:
 
         for outp in self.outputs:
             outp.reset(flg)
-
-    # def is_connected(self):
-    #     '''check if all signals are connected to some output 
-    #         (always true for an output)'''
-    #     return all(self._signals)
-
-    # def copy(self):
-    #     return Block(self.block_type, self.pars, self.states, self.sim)
 
     def calc(self, t, dt):
         '''

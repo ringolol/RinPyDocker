@@ -30,7 +30,8 @@ LE = r'(?P<LE><=)'          # LE must be above EQUALS and LT
 NE = r'(?P<NE>!=)'          # NE must be above EQUALS
 GT = r'(?P<GT>>)'
 LT = r'(?P<LT><)'
-ASS = r'(?P<ASS>[A-Za-z_][A-Za-z_0-9]*[ \t\r\f\v]*=)' # ASS must be above NAME
+# ASS must be above NAME
+ASS = r'(?P<ASS>[A-Za-z_][A-Za-z_0-9]*[ \t\r\f\v]*=(?!=))'
 VAR = r'(?P<VAR>var)'       # VAR must be above NAME
 DEF = r'(?P<DEF>def)'       # DEF must be above NAME
 IF = r'(?P<IF>if)'          # IF must be above NAME
@@ -118,6 +119,7 @@ def print_signal(pars, memo_space, sim):
         if isinstance(par, Block):
             # print('is block')
             # print(str(par))
+            # lines.append(f'{par.block_type}_{par.id} = {round(par.outputs[0].val, 5)}')
             lines.append(str(par.outputs[0].val))
             # lines.append(str(par))
         elif isinstance(par, list):
