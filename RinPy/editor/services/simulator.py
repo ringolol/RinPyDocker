@@ -112,9 +112,9 @@ def fun(t, dt, inputs, outputs, pars, states, source):
 
     f = pars[0]
     sim = Sim()
-    p = [sim.create('num', [inp.val]) for inp in inputs.values()]
+    p = [sim.create('num', [inp.val]) for inp in inputs]
     outs = f(pars=p, sim=sim, memo_space={}, sys=True)
-    for inx in range(len(outputs.values())):
+    for inx in range(len(outputs)):
         outputs[inx].val = outs[inx].outputs[0].val
 
 
@@ -245,8 +245,8 @@ class Signal:
         return m.outputs[0]
 
     def __matmul__(self, other):
-        dic = other.parent.inputs
-        oinx = list(dic.keys())[list(dic.values()).index(other)]
+        lst = other.parent.inputs
+        oinx = lst.index(other)
         other.parent.inputs[oinx] = self
         other.parent.upd_and_calc()
         return other
@@ -283,10 +283,24 @@ class Block:
     def __init__(self, block_type, pars, states, sim):
         '''
         init block using its name, pars and states
-
+            block_type -- block type (num, add, sub, fun, integ...)
+            pars -- user defined parameters
+            states -- user defined states
+            sim -- the simulator
+            inert -- if block is not inert use numeric integration
+                to calc it else use fun directly
+            source -- if block is source it doesn't need to wait
+                for inputs
+            fun -- block behavior, tells how outputs should be calced
+            inputs -- block inputs, a list of signals
+            outputs -- block outputs, a list of signals
+            const -- constant blocks can be calculated in place
+                ex: 1 + 2 = 3, but 1 + integ() = ?
         '''
 
         self.block_type = block_type
+
+        # get block default parameters (not just pars) by its type
         (self.inert, self.source, inpN, outpN, 
                 def_pars, def_states) = BLOCK_TYPES[block_type]
 
@@ -315,17 +329,19 @@ class Block:
         self.fun = BLOCK_FUNCTIONS[block_type]
         self.sim = sim
 
-        self.inputs = { key:Signal(self, self.sim) for key in range(inpN) }
-        self.outputs = { key:Signal(self, self.sim) for key in range(outpN) }
+        self.inputs = [ Signal(self, self.sim) for _ in range(inpN) ]
+        self.outputs = [ Signal(self, self.sim) for _ in range(outpN) ]
         self.const = self.inert
 
     def is_ready(self):
         '''return true if all inputs are ready'''
-        return all([inp.ready for inp in self.inputs.values()])
+
+        return all([inp.ready for inp in self.inputs])
 
     def set_ready(self, flg=True):
         '''set all outputs ready'''
-        for outp in self.outputs.values():
+
+        for outp in self.outputs:
             outp.reset(flg)
 
     # def is_connected(self):
@@ -337,43 +353,53 @@ class Block:
     #     return Block(self.block_type, self.pars, self.states, self.sim)
 
     def calc(self, t, dt):
+        '''
+        one iteration of calc for the block
+            t -> t + dt'''
+
+        # block is not ready for calc
         if not self.source and not self.is_ready():
             return False
 
-        '''calc the block'''
-        if self.inert:
-            # algebraic calculation
+        if self.inert: # algebraic calculation
             self.fun(
                 t, dt, self.inputs, 
                 self.outputs, self.pars, self.states, self.source
             )
-        else:
-            # numeric integration
+        else: # numeric integration
             dx12 = self.fun(
                 t, dt, self.inputs, 
                 self.outputs, self.pars, self.states, self.source
             )
+            # integ and upd states
             for i in range(len(self.states)-1, -1, -1):
                 self.states[i] = rect_meth(t, dt, self.states[i], dx12)
                 self.outputs[i].val = self.states[i]
 
+        # ready up outputs
         self.set_ready()
         return True
 
     def upd_and_calc(self):
+        '''upd block outputs (for const blocks)'''
+
+        # todo: check if block is const?
         self.upd_const_flag()
         if self.const:
             self.calc(0, 0)
 
     def upd_const_flag(self):
-        self.const = all([not inp or inp.parent.const for inp in self.inputs.values()])
+        '''check if block is still constant'''
+
+        self.const = all([not inp or inp.parent.const for inp in self.inputs]) \
+                and self.const
 
     def __repr__(self):
         return f'Block(name={self.block_type}, pars={self.pars},'+\
             f' states={self.states}, inp={self.inputs}, outp={self.outputs})'
 
     def __mul__(self, other):
-        '''multiply two signals'''
+        '''multiply output signals from two blocks'''
         m = self.sim.create('mult')
         m.inputs[0] = self.outputs[0]
         m.inputs[1] = other.outputs[0]
@@ -435,82 +461,4 @@ class Block:
 
     def __ge__(self, other):
         return other.__lt__(self) or self.__eq__(other)
-
-
-if __name__ == '__main__':
-    # static system
-    sim = Sim()
-    memory = {}
-    memory['c'] = sim.create('num', [2])
-    memory['z'] = memory['c'] @ sim.create('num', [3])
-    memory['c2'] = sim.create('num', [3])
-    memory['y'] = memory['c'] + memory['c2']
-    memory['b'] = -memory['c2']
-    memory['x'] = memory['c'] - memory['c2']
-    sim.calc(2, 1)
-    print(sim)
-
-    # dynamic system #1
-    sim = Sim()
-    memory = {}
-    memory['x'] = sim.create('num', [1])
-    memory['y'] = sim.create('integ', [])
-    memory['e'] = memory['x'] - memory['y']
-    memory['e'] @ memory['y']
-    sim.calc(0.005, 20)
-    fig = tpl.figure()
-    fig.plot(sim.t_hist, memory['y'].outputs[0].hist, ylim=[0, 1.1])
-    fig.show()
-
-    # dynamic system #2
-    sim = Sim()
-    memory = {}
-    memory['x'] = sim.create('num', [1])
-    memory['dy'] = sim.create('integ')
-    memory['y'] = memory['dy'] @ sim.create('integ')
-    memory['kdy'] = memory['dy'] @ sim.create('num', [0.3])
-    memory['s']  = memory['kdy'] + memory['y']
-    memory['e'] = memory['x'] - memory['s']
-    (memory['e'] * sim.create('num', [1])) @ memory['dy']
-    sim.calc(0.001, 20)
-    fig = tpl.figure()
-    fig.plot(sim.t_hist, memory['y'].outputs[0].hist)
-    fig.show()
-    fig2 = tpl.figure()
-    fig2.plot(memory['y'].outputs[0].hist, memory['dy'].outputs[0].hist)
-    fig2.show()
-
-    # static #2
-    # 2*(1-2)
-    sim = Sim()
-    memory = {}
-    memory['x'] = sim.create('num', [1]) - sim.create('num', [2])
-    memory['y'] = sim.create('num', [2])*memory['x']
-    sim.calc(2, 1)
-    print(memory['x'], memory['y'])
-
-    # static #3
-    sim = Sim()
-    memory = {}
-    memory['y'] = sim.create('num', [14]) / sim.create('num', [2])
-    sim.calc(2, 1)
-    print(memory['y'])
-
-    # dynamic #3
-    sim = Sim()
-    memory = {}
-    memory['y'] = sim.create('integ')
-    sim.calc(0.01, 5)
-    fig = tpl.figure()
-    fig.plot(sim.t_hist, memory['y'].outputs[0].hist)
-    fig.show()
-
-    # logic #1
-    sim = Sim()
-    memory = {}
-    memory['x'] = sim.create('num', [15])
-    memory['y'] = sim.create('num', [15])
-    memory['z'] = sim.create('num', [14])
-    sim.calc(2, 1)
-    print(memory['x'] > memory['y'], memory['x'] == memory['y'], memory['x'] > memory['z'])
-
+        
