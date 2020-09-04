@@ -72,6 +72,7 @@ class Fun:
             out_val = ExpressionEvaluator(sim, space).parse(self._body)
         except ReturnException as ex:
             out_val = ex.val
+
         return out_val
 
     def __repr__(self):
@@ -310,7 +311,7 @@ class ExpressionEvaluator:
             val = self.memory[name][int(num)]
             self._expect('RSQBRACK')
             if isinstance(val, Fun):
-                name = val.name
+                name = val.block_type
             elif isinstance(val, Block) or isinstance(val, list) or isinstance(val, Signal):
                 self.memory['_'] = val
                 try:

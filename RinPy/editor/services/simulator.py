@@ -22,13 +22,21 @@ import termplotlib as tpl
 
 
 class ReturnException(Exception):
+    '''
+    ReturnException is raised when user defined function
+        returns a value
+    '''
+
     def __init__(self, val):
         super().__init__()
         self.val = val
 
 
 class SimException(Exception):
+    '''Exception that is raised in simulator'''
+
     pass
+
 
 # class Array(list): # in use!
 #     '''array which can store FUNs and blocks'''
@@ -45,41 +53,70 @@ BlockType = namedtuple('BlockType', [
     'def_states'    # default states
 ])
 
+
 # numeric integrals
 def rect_meth(t, dt, xn, dx):
-    # x(n+1) = x(n) + (t2-t1)*dx
+    '''
+    the simplest numeric integral:
+        x(n+1) = x(n) + (t2-t1)*dx
+    '''
+
     return xn + dt*dx
+
 
 # blocks' functions
 def num(t, dt, inputs, outputs, pars, states, source):
-    if not source:
+    '''
+    a num block can be either a constant source or 
+        a gain
+    '''
+
+    if not source: # is gain
         outputs[0].val = pars[0] * inputs[0].val
-    else:
+    else: # is source
         outputs[0].val = pars[0]
 
 def add(t, dt, inputs, outputs, pars, states, source):
+    '''add outputs from two blocks'''
+
     outputs[0].val = inputs[0].val + inputs[1].val
 
 def integ(t, dt, inputs, outputs, pars, states, source):
-    return inputs[0].val if inputs[0] != None \
-        and inputs[0].val != None else 0
+    '''an integrator (1/s)'''
+
+    if inputs[0] != None and inputs[0].val != None:
+        return inputs[0].val
+    return states[0]
 
 def div(t, dt, inputs, outputs, pars, states, source):
+    '''div outputs from two blocks'''
+
     outputs[0].val = inputs[0].val / inputs[1].val
 
 def mult(t, dt, inputs, outputs, pars, states, source):
+    '''mult outputs from two blocks'''
+
     outputs[0].val = inputs[0].val * inputs[1].val
 
 def time(t, dt, inputs, outputs, pars, states, source):
+    '''return sim time'''
+
     outputs[0].val = t
 
 def fun(t, dt, inputs, outputs, pars, states, source):
+    '''
+    creates a function block from a user function
+        pars[0] -- Fun(...),
+        pars[1] -- outputs size
+    '''
+
     f = pars[0]
     sim = Sim()
-    outs = f(pars=[sim.create('num', [inp.val]) for inp in inputs.values()], 
-                    sim=sim, memo_space={}, sys=True).outputs
-    for inx, out in enumerate(outs.values()):
-        outputs[inx].val = out.val
+    p = [sim.create('num', [inp.val]) for inp in inputs.values()]
+    outs = f(pars=p, sim=sim, memo_space={}, sys=True)
+    for inx in range(len(outputs.values())):
+        outputs[inx].val = outs[inx].outputs[0].val
+
 
 # blocks
 BLOCK_TYPES = {
@@ -112,15 +149,17 @@ class Sim:
         self.t_hist = None
 
     def create(self, name, pars=None, states=None):
-        '''add block to simulation using name, parameters (pars) and states'''
+        '''add block to simulation using name, pars and states'''
+
         block = Block(name, pars, states, self)
         self.blocks.append(block)
         if name == 'num':
-            block.calc(2, 1)
+            block.upd_and_calc()
         return block
 
     def calc(self, dt, tmax):
-        '''calculate for tmax time with step dt'''
+        '''simulate the system for tmax time with step dt'''
+
         t = 0
         self.t_hist = []
         self.reset()
@@ -136,6 +175,7 @@ class Sim:
                         try:
                             block.calc(t, dt)
                         except Exception as ex:
+                            raise ex
                             print(ex)
                         cont_flg = True
                     else:
@@ -151,6 +191,8 @@ class Sim:
             t += dt
 
     def reset(self):
+        '''reset all blocks ready flag'''
+
         for block in self.blocks:
             block.set_ready(False)
 
@@ -163,12 +205,22 @@ class Sim:
 
 
 class Signal:
-    '''simple signal between blocks'''
-    def __init__(self, parent=None):
+    '''
+    simple signal between blocks class
+        parent -- signal parant block
+        val -- signal value
+        ready -- if true signal have been calculated
+                    during this sim
+        sim -- the simulator
+        hist -- history of val values (for plots)
+    '''
+
+    def __init__(self, parent, sim):
         self.ready = False
-        self._val = 0
         self.parent = parent
+        self.sim = sim
         self.hist = []
+        self.val = 0
 
     @property
     def val(self):
@@ -183,7 +235,7 @@ class Signal:
         self.ready = flg
 
     def __repr__(self):
-        return f'Signal(val={self.val}, parent={self.parent.name})'
+        return f'Signal(val={self.val}, parent={self.parent.block_type})'
 
     def __mul__(self, other):
         m = self.sim.create('mult')
@@ -228,38 +280,44 @@ class Signal:
 class Block:
     '''a sim block'''
 
-    def __init__(self, name, pars, states, sim):
-        '''init block using its name, pars and states'''
+    def __init__(self, block_type, pars, states, sim):
+        '''
+        init block using its name, pars and states
 
-        self.name = name
+        '''
+
+        self.block_type = block_type
         (self.inert, self.source, inpN, outpN, 
-                def_pars, def_states) = BLOCK_TYPES[name]
+                def_pars, def_states) = BLOCK_TYPES[block_type]
 
+        # try to insert user parameters into block
         if pars == None:
             self.pars = def_pars[:]
         elif len(pars) == len(def_pars):
             self.pars = pars[:]
-            if name == 'fun':
-                inpN = int(self.pars[1].outputs[0].val)
-                outpN = len(self.pars[0]._par_names)
+            # todo: rethink the way of changing inps num
+            if block_type == 'fun':
+                outpN = int(self.pars[1].outputs[0].val)
+                inpN = len(self.pars[0]._par_names)
         else:
-            raise SimException(f'number of pars for block {name} does not match'+\
+            raise SimException(f'number of pars for block {block_type} does not match'+\
                     f', need {len(def_pars)} got {len(pars)}')
 
-        self.inputs = { key:Signal(self) for key in range(inpN) }
-        self.outputs = { key:Signal(self) for key in range(outpN) }
-        self.const = self.inert
-
+        # try to insert user states into block
         if states == None:
             self.states = def_states[:]
         elif len(states) == len(def_states):
             self.states = states[:]
         else:
-            raise SimException(f'states number for block {name} does not match'+\
+            raise SimException(f'states number for block {block_type} does not match'+\
                     f', need {len(def_states)} got {len(states)}')
 
-        self.fun = BLOCK_FUNCTIONS[name]
+        self.fun = BLOCK_FUNCTIONS[block_type]
         self.sim = sim
+
+        self.inputs = { key:Signal(self, self.sim) for key in range(inpN) }
+        self.outputs = { key:Signal(self, self.sim) for key in range(outpN) }
+        self.const = self.inert
 
     def is_ready(self):
         '''return true if all inputs are ready'''
@@ -276,7 +334,7 @@ class Block:
     #     return all(self._signals)
 
     # def copy(self):
-    #     return Block(self.name, self.pars, self.states, self.sim)
+    #     return Block(self.block_type, self.pars, self.states, self.sim)
 
     def calc(self, t, dt):
         if not self.source and not self.is_ready():
@@ -311,7 +369,7 @@ class Block:
         self.const = all([not inp or inp.parent.const for inp in self.inputs.values()])
 
     def __repr__(self):
-        return f'Block(name={self.name}, pars={self.pars},'+\
+        return f'Block(name={self.block_type}, pars={self.pars},'+\
             f' states={self.states}, inp={self.inputs}, outp={self.outputs})'
 
     def __mul__(self, other):
@@ -325,7 +383,7 @@ class Block:
     def __matmul__(self, other):
         '''concatenatinate blocks, e.g. [b1]-->[b2]-->'''
         # num block after connection its input becomes a gain
-        if other.name in ['num']:
+        if other.block_type in ['num']:
             other.source = False
         other.inputs[0] = self.outputs[0]
         other.upd_and_calc()
