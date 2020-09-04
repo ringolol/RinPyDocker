@@ -1,0 +1,14 @@
+def foo(x, y) {
+    return [x + y, 42 - y]
+}
+
+a = 1
+b = time()
+f = fun(foo, 2)
+a.outputs[0] @ f.inputs[0]
+b.outputs[0] @ f.inputs[1]
+calc(0.1, 5)
+print(f)
+print(f.outputs[0])
+print(f.outputs[1])
+plot(b, f)
