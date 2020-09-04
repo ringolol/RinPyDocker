@@ -1,9 +1,0 @@
-i = 0
-while i < 10 {
-  if i > 5 {
-    print(1, i) 
-  } else {
-    print(0, i) 
-  }
-  i = i + 1
-}
