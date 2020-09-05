@@ -25,8 +25,7 @@ def editor_main(request):
 
 def get_current_path(request):
     # get editor path from cookies
-    os.chdir('/home/restricted_user/')
-    current_path = request.session.get('current_path', '.')
+    current_path = request.session.get('current_path', './default_user_files')
     print('current_path: ' + current_path)
     return current_path
 
@@ -68,7 +67,7 @@ def list_files(current_path):
     try:
         # f = run(f'sudo su - restricted_user -c "ls {current_path}"', 
         #         shell=True, check=True, capture_output=True, timeout=5)
-        f = run(f'ls {current_path}', 
+        f = run(f'docker exec rinpydocker_excecutor_1 ls {current_path}', 
                 shell=True, check=True, capture_output=True, timeout=5)
         # folders are blue and files are white
         files = list(map(

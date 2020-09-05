@@ -15,7 +15,6 @@ services:
     volumes:
       - static_volume:/code/staticfiles
       - /var/run/docker.sock:/var/run/docker.sock
-      - exec_volume:/code/exce
     ports:
       - 8000:8000
     depends_on:
@@ -44,9 +43,9 @@ services:
       - static_volume:/code/staticfiles
   excecutor:
     build: ./excecutor
-    # image: python:3.8.3-alpine
     volumes:
       - exec_volume:/code/default_user_files
+    tty: true # similar to "command: tail -F anything"
 
 volumes:
   postgres_data:
