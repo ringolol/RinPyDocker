@@ -14,6 +14,8 @@ services:
     command: python manage.py runserver 0.0.0.0:8000  
     volumes:
       - static_volume:/code/staticfiles
+      - /var/run/docker.sock:/var/run/docker.sock
+      - exec_volume:/code/exce
     ports:
       - 8000:8000
     depends_on:
@@ -40,7 +42,12 @@ services:
       - ./.env.dev
     volumes:
       - static_volume:/code/staticfiles
+  excecutor:
+    build: ./RinPy
+    volumes:
+      - exec_volume:/code/exce
 
 volumes:
   postgres_data:
   static_volume:
+  exec_volume:
