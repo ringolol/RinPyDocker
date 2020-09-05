@@ -16,6 +16,7 @@ services:
     command: gunicorn RinPy.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - static_volume:/code/staticfiles
+      - /var/run/docker.sock:/var/run/docker.sock
     expose:
       - 8000
     depends_on:
@@ -50,7 +51,14 @@ services:
       - 80:80
     depends_on:
       - web
+  excecutor:
+    build: ./excecutor
+    volumes:
+      - exec_volume:/code/default_user_files
+    tty: true # similar to "command: tail -F anything"
+    
 
 volumes:
   postgres_data:
   static_volume:
+  exec_volume:
