@@ -8,4 +8,3 @@ print(a)
 x.out[0] @ b.in[0]
 a.out[0] @ b.in[1]
 print(b)
-debug()
