@@ -1,7 +1,11 @@
-from .parser import ExpressionEvaluator
 import io
 from contextlib import redirect_stdout
 import asyncio
+
+try:
+    from .parser import ExpressionEvaluator
+except ImportError:
+    from parser import ExpressionEvaluator
 
 # use docker instead of this stone-age technology!
 
