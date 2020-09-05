@@ -1,0 +1,9 @@
+x = 1
+y = integ()
+e = x - y
+e @ y
+t = time()
+calc(0.01, 10)
+plot(t, y)
+print(y)
+print(e)

@@ -43,9 +43,10 @@ services:
     volumes:
       - static_volume:/code/staticfiles
   excecutor:
-    build: ./RinPy
+    build: ./excecutor
+    # image: python:3.8.3-alpine
     volumes:
-      - exec_volume:/code/exce
+      - exec_volume:/code/default_user_files
 
 volumes:
   postgres_data:
