@@ -20,7 +20,7 @@ COPY . .
 # RUN adduser restricted_user -D
 # RUN cp -R ./default_user_files/* /home/restricted_user
 # RUN chmod 777 -R /home/restricted_user
-# RUN apk update
-# RUN apk add --upgrade gnuplot
+RUN apk update
+RUN apk add --upgrade gnuplot
 
 RUN apk add docker
