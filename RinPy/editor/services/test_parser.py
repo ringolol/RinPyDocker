@@ -357,7 +357,7 @@ print(y)
 ''' # 0.84814
 
 
-class TestStringMethods(unittest.TestCase):
+class TestParser(unittest.TestCase):
 
     def test_add(self):
         self.assertEqual(float(djex.djex({}, code_add)), 2)
