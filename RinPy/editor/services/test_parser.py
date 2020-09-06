@@ -390,7 +390,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(float(djex.djex({}, code_if_ifelse_else2)), 3)
     
     def test_div_zero(self):
-        self.assertEqual(djex.djex({}, code_div_zero).strip(), 'float division by zero')
+        self.assertIn('division by zero', djex.djex({}, code_div_zero))
 
     def test_array(self):
         self.assertEqual(float(djex.djex({}, code_array)), 2)
