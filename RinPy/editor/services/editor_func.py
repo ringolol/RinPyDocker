@@ -67,7 +67,10 @@ def list_files(current_path):
     try:
         # f = run(f'sudo su - restricted_user -c "ls {current_path}"', 
         #         shell=True, check=True, capture_output=True, timeout=5)
-        f = run(f'docker exec rinpydocker_excecutor_1 ls {current_path}', 
+        # f = run(f'docker exec rinpydocker_excecutor_1 ls {current_path}', 
+        #         shell=True, check=True, capture_output=True, timeout=5)
+        # todo: take this from the DB
+        f = run(f'docker run --rm rinpydocker_excecutor ls {current_path}', 
                 shell=True, check=True, capture_output=True, timeout=5)
         # folders are blue and files are white
         files = list(map(

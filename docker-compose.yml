@@ -46,6 +46,7 @@ services:
     volumes:
       - exec_volume:/code/default_user_files
     tty: true # similar to "command: tail -F anything"
+    command: python -m unittest test_parser.py
 
 volumes:
   postgres_data:
