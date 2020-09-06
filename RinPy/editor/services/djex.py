@@ -51,12 +51,17 @@ parser.parse("""
 """)
 '''
 
+# Known Python Injection:
+#   1""")
+#   import os
+#   print(os.system("ls -a"))
+#   ("""
+
 def djex(request, sim_code_str, file_path='', timeout=30):
     '''exec code_str and return print output or exception text'''
 
     # run code and return output and errors
     py_code = dec_code.format(sim_code_str)
-    output = ''
     try:
         # o = run(f'docker exec rinpydocker_excecutor_1 python -c \'{py_code}\'', 
         #     shell=True, 
