@@ -9,7 +9,6 @@ from . import djex
 
 re_par_dir = re.compile(r'\$go_to_parents_directory\$(?P<num>[0-9]+)')
 
-
 def editor_main(request):
     current_path = get_current_path(request)
     inpt, output, current_path = handle_button_click(request, current_path)
@@ -65,11 +64,8 @@ def explorer_func(inpt, current_path, file_name):
 def list_files(current_path):
     # list files in the explorer path
     try:
-        # f = run(f'sudo su - restricted_user -c "ls {current_path}"', 
-        #         shell=True, check=True, capture_output=True, timeout=5)
-        # f = run(f'docker exec rinpydocker_excecutor_1 ls {current_path}', 
-        #         shell=True, check=True, capture_output=True, timeout=5)
-        # todo: take this from the DB
+        # f'sudo su - restricted_user -c "ls {current_path}"'
+        # f'docker exec rinpydocker_excecutor_1 ls {current_path}'
         f = run(f'docker run --rm rinpydocker_excecutor ls {current_path}', 
                 shell=True, check=True, capture_output=True, timeout=5)
         # folders are blue and files are white
