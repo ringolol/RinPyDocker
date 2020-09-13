@@ -3,7 +3,7 @@ import io
 from contextlib import redirect_stdout
 import asyncio
 
-from parser import ExpressionEvaluator
+from sim_parser import ExpressionEvaluator
 
 
 async def parse_code(code_str):
