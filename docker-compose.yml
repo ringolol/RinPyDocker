@@ -46,7 +46,7 @@ services:
     volumes:
       - exec_volume:/code/default_user_files
     # tty: true # similar to "command: tail -F anything", not working with command!
-    command: python -m unittest test_parser.py
+    command: python -m unittest test_parser
 
 volumes:
   postgres_data:
