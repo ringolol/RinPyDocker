@@ -162,7 +162,7 @@ SESSION_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SAMESITE = 'None'
 # SESSION_COOKIE_SECURE = True
 # CSRF_COOKIE_SECURE = True
-# SESSION_SAVE_EVERY_REQUEST = True
+SESSION_SAVE_EVERY_REQUEST = True
 
 # from corsheaders.defaults import default_methods
 
