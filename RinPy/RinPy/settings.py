@@ -182,4 +182,4 @@ CSRF_TRUSTED_ORIGINS = [
     '127.0.0.1'
 ]
 
-# CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_NAME = "csrftoken"
