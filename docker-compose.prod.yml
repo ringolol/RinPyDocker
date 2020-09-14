@@ -49,6 +49,7 @@ services:
       - static_volume:/code/staticfiles
     ports:
       - 80:80
+      - 443:443
     depends_on:
       - web
   excecutor:
