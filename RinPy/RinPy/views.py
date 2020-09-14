@@ -3,7 +3,9 @@ from django.shortcuts import redirect
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 from django.template import loader
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
+import pathlib
+
 
 def logout_request(request):
     logout(request)
@@ -24,4 +26,14 @@ def register(request):
         f = UserCreationForm()
 
     return HttpResponse(template.render({'form': f}, request))
+
+def https_verification(request):
+    # with open('files_here', 'w') as f:
+    #     f.write('lol')
+
+    # # print()
+    
+    # return HttpResponse(f'{pathlib.Path().absolute()}')
+    return FileResponse(open('FBE8D574B4B887AD00A1D6499B13A9E0.txt', 'rb'))
+    # return response
     
