@@ -25,7 +25,8 @@ SECRET_KEY = os.environ.get("SECRET_KEY", 'very_secret_key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = int(os.environ.get("DEBUG", 1))
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", '127.0.0.1 localhost').split(' ')
+# ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", '127.0.0.1 localhost').split(' ')
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -158,11 +159,11 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = True
 
-# SESSION_COOKIE_SAMESITE = 'None'
-# CSRF_COOKIE_SAMESITE = 'None'
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-# SESSION_SAVE_EVERY_REQUEST = True
+SESSION_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_SAVE_EVERY_REQUEST = True
 
 # from corsheaders.defaults import default_methods
 
@@ -175,3 +176,10 @@ CORS_ALLOW_CREDENTIALS = True
 #     "http://localhost:3000",
 #     "http://127.0.0.1:3000"
 # ]
+
+CSRF_TRUSTED_ORIGINS = [
+    'localhost',
+    '127.0.0.1'
+]
+
+# CSRF_COOKIE_NAME = "csrftoken"
