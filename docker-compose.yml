@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=postgres
   web:
     build: ./RinPy
-    command: python manage.py runserver 0.0.0.0:8000  
+    command: python manage.py runserver 0.0.0.0:80
     volumes:
       - static_volume:/code/staticfiles
       - /var/run/docker.sock:/var/run/docker.sock
