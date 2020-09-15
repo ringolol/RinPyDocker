@@ -172,10 +172,7 @@ SESSION_SAVE_EVERY_REQUEST = True
 #     'Access-Control-Allow-Credentials',
 # ]
 
-CORS_ALLOWED_ORIGINS = [
-    "https://localhost",
-    "https://127.0.0.1"
-]
+CORS_ALLOWED_ORIGINS = ['*']
 
 CORS_ALLOW_METHODS = [
     'DELETE',
