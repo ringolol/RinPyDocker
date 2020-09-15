@@ -173,8 +173,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 # ]
 
 CORS_ALLOWED_ORIGINS = [
-    "localhost",
-    "127.0.0.1"
+    "https://localhost",
+    "https://127.0.0.1"
 ]
 
 CORS_ALLOW_METHODS = [
