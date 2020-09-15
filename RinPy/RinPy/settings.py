@@ -165,14 +165,17 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 
-# from corsheaders.defaults import default_methods
+from corsheaders.defaults import default_methods
 
-# CORS_ALLOW_METHODS = list(default_methods) + [
-#     'Access-Control-Allow-Headers',
-#     'Access-Control-Allow-Credentials',
-# ]
+CORS_ALLOW_METHODS = list(default_methods) + [
+    'Access-Control-Allow-Headers',
+    'Access-Control-Allow-Credentials',
+]
 
-CORS_ALLOWED_ORIGINS = ['*']
+CORS_ALLOWED_ORIGINS = [
+    "https://localhost",
+    "https://127.0.0.1"
+]
 
 CORS_ALLOW_METHODS = [
     'DELETE',
