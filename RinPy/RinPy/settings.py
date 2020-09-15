@@ -155,7 +155,7 @@ REST_REGISTRATION = {
     'RESET_PASSWORD_VERIFICATION_ENABLED': False,
 }
 
-CORS_ORIGIN_ALLOW_ALL = True
+# CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -165,38 +165,38 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SESSION_SAVE_EVERY_REQUEST = True
 
-from corsheaders.defaults import default_methods
+# from corsheaders.defaults import default_methods
 
-CORS_ALLOW_METHODS = list(default_methods) + [
-    'Access-Control-Allow-Headers',
-    'Access-Control-Allow-Credentials',
-]
+# CORS_ALLOW_METHODS = list(default_methods) + [
+#     'Access-Control-Allow-Headers',
+#     'Access-Control-Allow-Credentials',
+# ]
 
-CORS_ALLOWED_ORIGINS = [
-    "https://localhost:3000",
-    "https://127.0.0.1:3000"
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "localhost",
+#     "127.0.0.1"
+# ]
 
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
+# CORS_ALLOW_METHODS = [
+#     'DELETE',
+#     'GET',
+#     'OPTIONS',
+#     'PATCH',
+#     'POST',
+#     'PUT',
+# ]
 
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
+# CORS_ALLOW_HEADERS = [
+#     'accept',
+#     'accept-encoding',
+#     'authorization',
+#     'content-type',
+#     'dnt',
+#     'origin',
+#     'user-agent',
+#     'x-csrftoken',
+#     'x-requested-with',
+# ]
 
 CSRF_TRUSTED_ORIGINS = [
     'localhost',
