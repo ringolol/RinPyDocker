@@ -155,9 +155,9 @@ REST_REGISTRATION = {
     'RESET_PASSWORD_VERIFICATION_ENABLED': False,
 }
 
-# CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = True
 
-# CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = True
 
 SESSION_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_SAMESITE = 'None'
@@ -198,9 +198,9 @@ SESSION_SAVE_EVERY_REQUEST = True
 #     'x-requested-with',
 # ]
 
-CSRF_TRUSTED_ORIGINS = [
-    'localhost',
-    '127.0.0.1',
-]
+# CSRF_TRUSTED_ORIGINS = [
+#     'localhost',
+#     '127.0.0.1',
+# ]
 
-CSRF_COOKIE_NAME = "csrftoken"
+# CSRF_COOKIE_NAME = "csrftoken"
