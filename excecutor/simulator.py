@@ -93,6 +93,11 @@ def add(t, dt, inputs, outputs, pars, states, source):
 
     outputs[0].val = inputs[0].val + inputs[1].val
 
+def sub(t, dt, inputs, outputs, pars, states, source):
+    '''suntract outputs from two blocks'''
+
+    outputs[0].val = inputs[0].val - inputs[1].val
+
 def integ(t, dt, inputs, outputs, pars, states, source):
     '''an integrator (1/s)'''
 
@@ -129,27 +134,36 @@ def fun(t, dt, inputs, outputs, pars, states, source):
     for inx in range(len(outputs)):
         outputs[inx].val = outs[inx].outputs[0].val
 
+def disp(t, dt, inputs, outputs, pars, states, source):
+    '''add outputs from two blocks'''
+
+    outputs[0].val = inputs[0].val
+
 
 # blocks
 BLOCK_TYPES = {
     'num':      BlockType(True,  True,  1, 1, [1], []),
     'add':      BlockType(True,  False, 2, 1, [], []),
+    'sub':      BlockType(True,  False, 2, 1, [], []),
     'integ':    BlockType(False, True,  1, 1, [], [0]),
     'div':      BlockType(True,  False, 2, 1, [], []),
     'mult':     BlockType(True,  False, 2, 1, [], []),
     'time':     BlockType(True,  True,  0, 1, [], []),
     'fun':      BlockType(True,  True,  1, 1, [None, None], []),
+    'disp':     BlockType(True,  False, 1, 1, [], []),
 }
 
 # functions for blocks
 BLOCK_FUNCTIONS = {
     'num':      num,
     'add':      add,
+    'sub':      sub,
     'integ':    integ,
     'div':      div,
     'mult':     mult,
     'time':     time,
     'fun':      fun,
+    'disp':     disp,
 }
 
 
@@ -264,7 +278,7 @@ class Signal:
         oinx = lst.index(other)
         other.parent.inputs[oinx] = self
         other.parent.upd_and_calc()
-        return other.parent.outputs[0]
+        return other.parent.outputs[0] if other.parent.outputs else float('nan')
 
     def __add__(self, other):
         s = self.sim.create('add')
