@@ -25,8 +25,8 @@ async def run_code(code_str, timeout):
             print(str(e))
     return f.getvalue()
 
-def djex(request, code_str, file_path='', timeout=30):
-    '''exec code_str and return print output or exeption text'''
+def djex(request, code_str, timeout=30):
+    '''exec code_str and return print output or exception text'''
     
     out = asyncio.run(run_code(code_str, timeout))
     return out
