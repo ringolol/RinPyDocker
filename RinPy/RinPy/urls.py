@@ -64,5 +64,5 @@ urlpatterns = [
     path('', lambda request: redirect('editor')),
     # path('api/', include(router.urls)),
     path('api-token-auth/', api_views.obtain_auth_token, name='rest_api'),
-    path('.well-known/pki-validation/FBE8D574B4B887AD00A1D6499B13A9E0.txt', views.https_verification)
+    path('.well-known/pki-validation/8E640930E2EA34C26E89F0AB34458C21.txt', views.https_verification)
 ]
