@@ -354,7 +354,7 @@ print(y)
 ''' # 1.61094
 
 code_signal_routing_web = '''
-x = num(3)
+x = num([3])
 y = 4
 a = add()
 b = mult()
@@ -379,7 +379,7 @@ g = 1
 dy = integ()
 y = dy @ integ()
 e = g - (y + 0.8*dy)
-u = e @ fun(sign, 1)
+u = e @ fun([sign, 1])
 u @ dy
 t = time()
 calc(0.00005, 2)
