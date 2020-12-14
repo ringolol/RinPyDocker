@@ -34,6 +34,6 @@ def https_verification(request):
     # # print()
     
     # return HttpResponse(f'{pathlib.Path().absolute()}')
-    return FileResponse(open('FBE8D574B4B887AD00A1D6499B13A9E0.txt', 'rb'))
+    return FileResponse(open('8E640930E2EA34C26E89F0AB34458C21.txt', 'rb'))
     # return response
     
