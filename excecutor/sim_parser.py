@@ -358,22 +358,14 @@ class ExpressionEvaluator:
                 except SyntaxError:
                     if not self._accept('COMMA'):
                         expr_flg = False
-            
-            # pars, states = None, None
-            # try:
-            #     pars = self.factor()
-            #     self._expect('COMMA')
-            #     states = self.factor()
-            # except SyntaxError:
-            #     pass
 
             self._expect('RPAREN')
 
             if name in BLOCK_TYPES:
-                p = list(map(lambda x: x.pars[0], pars[0] if len(pars) in [1, 2] else None))
-                s = list(map(lambda x: x.pars[0],pars[1] if len(pars) == 2 else None))
-                print(p, s)
-                return self.sim.create(name, p, s) #pars[0], pars[1]
+                if len(pars) != 2:
+                    raise SyntaxError(f'Block {name} expected 2 parameters, ' +
+                            f'but got {len(pars)}')
+                return self.sim.create(name, pars[0], pars[1])
 
             out_val = self.memory[name](pars=pars, 
                                         memo_space=self.memory, 
