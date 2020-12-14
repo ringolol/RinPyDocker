@@ -254,10 +254,10 @@ print(f.out[1])
 
 code_harmonic_web = '''
 x = 1
-y = integ()
+y = integ([], [0.0])
 e = x - y
 e @ y
-t = time()
+t = time([], [])
 calc(0.001, 10)
 print(y)
 print(e)
@@ -343,21 +343,21 @@ while i < 5 {
 
 code_oscillator_web = '''
 x = 1
-dy = integ()
-y = dy @ integ()
+dy = integ([], [0.0])
+y = dy @ integ([], [0.0])
 kdy = dy @ 0.3
 e = x - (kdy + y)
 e @ dy
-t = time()
+t = time([], [])
 calc(0.00001, 3)
 print(y)
 ''' # 1.61094
 
 code_signal_routing_web = '''
-x = num([3])
+x = num([3], [])
 y = 4
-a = add()
-b = mult()
+a = add([], [])
+b = mult([], [])
 x.out[0] @ a.in[0]
 y.out[0] @ a.in[1]
 print(a)
@@ -376,12 +376,12 @@ def sign(x) {
 }
 
 g = 1
-dy = integ()
-y = dy @ integ()
+dy = integ([], [0.0])
+y = dy @ integ([], [0.0])
 e = g - (y + 0.8*dy)
-u = e @ fun([sign, 1])
+u = e @ fun([sign, 1], [])
 u @ dy
-t = time()
+t = time([], [])
 calc(0.00005, 2)
 print(y)
 ''' # 0.84814

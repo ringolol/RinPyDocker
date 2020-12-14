@@ -193,7 +193,8 @@ class Sim:
         self.t_hist = []
         self.reset()
         
-        while t <= tmax:
+        inf_cycle = False
+        while (not inf_cycle) and t <= tmax:
             sim_blocks = self.blocks
             cont_flg = True
             while sim_blocks:
@@ -215,6 +216,7 @@ class Sim:
                     print('-----------inf-cycle-----------')
                     print(sim_blocks)
                     print('-------------------------------')
+                    inf_cycle = True
                     break
             self.t_hist.append(t)
             t += dt
@@ -351,7 +353,7 @@ class Block:
         if states == None:
             self.states = def_states[:]
         elif len(states) == len(def_states):
-            self.states = states[:]
+            self.states = [s.outputs[0].val if isinstance(s, Block) else s for s in states]
         else:
             raise SimException(f'states number for block {block_type} does not match'+\
                     f', need {len(def_states)} got {len(states)}')
