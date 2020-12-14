@@ -21,7 +21,7 @@ async def run_code(code_str, timeout):
             print(f'Program was running for more than {timeout} '+
                     'sec and was terminated!')
         except Exception as e:
-            # raise
+            raise
             print(str(e))
     return f.getvalue()
 
@@ -47,13 +47,14 @@ for layer in diag['ser']['layers']:
                 model_name = f'num'
             elif model_name == 'gain':
                 model_name = f'gain'
-            code += f"{model_id} = {model_name}()\n"
+            model_pars = list(map(float, model['parameters'].values()))
+            model_states = list(map(float, model['states'].values()))
+            code += f"{model_id} = {model_name}({model_pars}, {model_states})\n"
             if model['name'] == 'disp':
                 disps.append(model_id)
             for port in model['ports']:
                 port_name = port['name'].split('_')
                 code += f"port_{port['id'].replace('-', '')} = {model_id}.{port_name[0].lower()+f'[{port_name[1]}]'}\n"
-
 for layer in diag['ser']['layers']:
     if layer['type'] == 'diagram-links':
         for model in layer['models'].values():
@@ -64,8 +65,6 @@ code += f"calc({diag['calc']['dt']}, {diag['calc']['t']})\n"
 
 for disp in disps:
     code += f"print({disp})\n"
-
-code = code.replace('num()', '1') # temp solution
 
 print(code)
 print(djex({}, code))
