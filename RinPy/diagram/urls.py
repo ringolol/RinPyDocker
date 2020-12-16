@@ -8,6 +8,7 @@ from . import views
 from .models import Block, DiagFiles
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from .views import diagram_parser_view
 
 
 class BlockSerializer(serializers.HyperlinkedModelSerializer):
@@ -45,8 +46,9 @@ class FilesViewSet(viewsets.ModelViewSet):
 router = routers.DefaultRouter()
 router.register(r'blocks', BlockViewSet)
 router.register(r'files', FilesViewSet, basename='files')
+# router.register(r'parse', ParseDiagram, basename='parse')
 
 urlpatterns = [
-    # path('', views.diagram, name='diagram'),
     path('api/', include(router.urls)),
+    path('api/parse', diagram_parser_view, name='parse')
 ]

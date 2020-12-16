@@ -28,12 +28,5 @@ def register(request):
     return HttpResponse(template.render({'form': f}, request))
 
 def https_verification(request):
-    # with open('files_here', 'w') as f:
-    #     f.write('lol')
-
-    # # print()
-    
-    # return HttpResponse(f'{pathlib.Path().absolute()}')
     return FileResponse(open('8E640930E2EA34C26E89F0AB34458C21.txt', 'rb'))
-    # return response
     
