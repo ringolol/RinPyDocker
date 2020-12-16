@@ -1,11 +1,12 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-from django.template import loader
-from django.contrib.auth.decorators import login_required
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+
+from .services.diagram_parser import parse_diagram
 
 
-# @login_required
-def diagram(request):
-    '''diagram page'''
-    template = loader.get_template('diagram/diagram.html')
-    return HttpResponse(template.render({}, request))
+@api_view(['POST'])
+def diagram_parser_view(request):
+    return Response({
+        # "output": ,
+        "output": parse_diagram(request.data),
+    })

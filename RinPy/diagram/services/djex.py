@@ -16,8 +16,8 @@ parser.parse("""
 """)
 '''
 
-def djex(request, sim_code_str, file_path='', timeout=30):
-    '''exec code_str and return print output or exception text'''
+def djex(sim_code_str, timeout=30):
+    '''execute sim_code_str and return print output and/or exception message'''
 
     # run code and return output and errors
     py_code = dec_code.format(sim_code_str)

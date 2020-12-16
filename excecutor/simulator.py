@@ -135,7 +135,7 @@ def fun(t, dt, inputs, outputs, pars, states, source):
         outputs[inx].val = outs[inx].outputs[0].val
 
 def disp(t, dt, inputs, outputs, pars, states, source):
-    '''add outputs from two blocks'''
+    '''display'''
 
     outputs[0].val = inputs[0].val
 
