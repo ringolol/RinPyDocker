@@ -1,0 +1,13 @@
+def f(a, b, n) {
+  if n > 0 {
+    return f(b, a+b, n-1)
+  } else {
+    return b
+  }
+}
+
+i = 0
+while i < 10 {
+  print(f(0, 1, i))
+  i = i + 1
+}
