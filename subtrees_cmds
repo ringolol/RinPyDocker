@@ -1,0 +1,2 @@
+git remote add -f RinPy git@github.com:ringolol/RinPy.git
+git subtree add --prefix RinPy RinPy master --squash
